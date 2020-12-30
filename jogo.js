@@ -110,11 +110,10 @@ function criaFlappyBird() {
             if(fazColisao(flappyBird, globais.chao)) {
                
                 som_HIT.play();
-                
-                setTimeout(()=>{
-                    mudaTela(Telas.INICIO);
 
-                }, 500);   
+                mudaTela(Telas.GAME_OVER);
+
+                
                 return;
             }
     
@@ -215,7 +214,7 @@ function criaCanos() {
         const cabecaDoFlappy = globais.flappyBird.yCanvas;
         const peDoFlappy = globais.flappyBird.yCanvas + globais.flappyBird.altura;
         
-        if(globais.flappyBird.xCanvas >= par.x) {
+        if((globais.flappyBird.xCanvas + globais.flappyBird.largura) >= par.x) {
           if(cabecaDoFlappy <= par.canoCeu.y) {
             return true;
           }
@@ -244,7 +243,8 @@ function criaCanos() {
   
           if(canos.temColisaoComOFlappyBird(par)) {
             console.log('Você perdeu!')
-            mudaTela(Telas.INICIO);
+            som_HIT.play();
+            mudaTela(Telas.GAME_OVER);
           }
   
           if(par.x + canos.largura <= 0) {
@@ -277,6 +277,49 @@ const mensagemGetReady = {
     }
 }
 
+const mensagemGameOver = {
+  sX: 134,
+  sY: 153,
+  w: 226,
+  h: 200,
+  x: (canvas.width /2 ) -226 / 2,
+  y: 50,
+  desenha() {
+      contexto.drawImage(
+          sprites,
+          mensagemGameOver.sX, mensagemGameOver.sY, //Sprite posição X, Sprite Y
+          mensagemGameOver.w, mensagemGameOver.h, // Tamanho do recorte na sprite
+          mensagemGameOver.x, mensagemGameOver.y, 
+          mensagemGameOver.w, mensagemGameOver.h,
+      );
+  }
+}
+
+
+function criaPlacar(){
+  const placar = {
+    pontuacao: 0,
+    desenha() {
+      contexto.font = '35px "VT323"';
+      contexto.textAlign = 'right';
+      contexto.fillStyle = 'white';
+      contexto.fillText(`${placar.pontuacao}`, canvas.width - 10, 35);
+      
+    },
+    atualiza() {
+      const intervaloDeFrames = 20;
+      const passouOIntervalor = frames % intervaloDeFrames === 0 ;
+
+      if(passouOIntervalor){
+        placar.pontuacao = placar.pontuacao+1;
+
+      }
+    }
+  }
+  return placar;
+}
+
+
 //
 // Telas
 //
@@ -290,6 +333,8 @@ function mudaTela(novaTela) {
         telaAtiva.inicializa();
     }
 }
+
+
  
 const Telas = {
     INICIO: {
@@ -316,11 +361,15 @@ const Telas = {
 };
 
 Telas.JOGO = {
+  inicializa(){
+        globais.placar = criaPlacar();
+  },
     desenha() {
         planoDeFundo.desenha();
         globais.canos.desenha();
         globais.chao.desenha();
         globais.flappyBird.desenha();
+        globais.placar.desenha();
     },
     click() {
         globais.flappyBird.pula();
@@ -329,8 +378,21 @@ Telas.JOGO = {
         globais.canos.atualiza();
         globais.chao.atualiza();
         globais.flappyBird.atualiza();
+        globais.placar.atualiza();
     }
 };
+
+Telas.GAME_OVER = {
+  desenha(){
+    mensagemGameOver.desenha();
+  },
+  atualiza(){
+
+  },
+  click(){
+    mudaTela(Telas.INICIO);
+  }
+}
 
 function loop() {
     
